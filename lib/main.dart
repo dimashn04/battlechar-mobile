@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:battlechar_mobile/menu.dart';
+import 'package:battlechar_mobile/screens/menu.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Battlechar',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
       ),
       home: MyHomePage(),
