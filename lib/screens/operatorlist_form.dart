@@ -1,6 +1,9 @@
-import 'package:battlechar_mobile/widgets/menu_card.dart';
 import 'package:flutter/material.dart';
 import 'package:battlechar_mobile/widgets/left_drawer.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
+import 'dart:convert';
+import 'package:battlechar_mobile/screens/menu.dart';
 
 class OperatorFormPage extends StatefulWidget {
     const OperatorFormPage({super.key});
@@ -9,12 +12,12 @@ class OperatorFormPage extends StatefulWidget {
     State<OperatorFormPage> createState() => _OperatorFormPageState();
 }
 
-List<Operator> operators = [];
 
 class _OperatorFormPageState extends State<OperatorFormPage> {
     final _formKey = GlobalKey<FormState>();
 
     String _name = "";
+    String _unit = "";
     int _price = 0;
     String _primaryWeapon = "";
     int _primaryWeaponAmmo = 0;
@@ -26,11 +29,14 @@ class _OperatorFormPageState extends State<OperatorFormPage> {
 
     @override
     Widget build(BuildContext context) {
+        final request = context.watch<CookieRequest>();
+
         return Scaffold(
           appBar: AppBar(
             title: const Center(
-              child: Text(
-                'Add Operator Form',
+              child: const Text(
+                'Add Operator',
+                style: TextStyle(color: Colors.white),
               ),
             ),
             backgroundColor: Colors.indigo.shade900,
@@ -61,6 +67,29 @@ class _OperatorFormPageState extends State<OperatorFormPage> {
                       validator: (String? value) {
                         if (value == null || value.isEmpty) {
                           return "Name cannot be empty!";
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextFormField(
+                      decoration: InputDecoration(
+                        hintText: "Operator Unit",
+                        labelText: "Operator Unit",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(5.0),
+                        ),
+                      ),
+                      onChanged: (String? value) {
+                        setState(() {
+                          _unit = value!;
+                        });
+                      },
+                      validator: (String? value) {
+                        if (value == null || value.isEmpty) {
+                          return "Unit cannot be empty!";
                         }
                         return null;
                       },
@@ -280,50 +309,42 @@ class _OperatorFormPageState extends State<OperatorFormPage> {
                                   backgroundColor:
                                       MaterialStateProperty.all(Colors.indigo),
                                 ),
-                                onPressed: () {
+                                onPressed: () async {
                                   if (_formKey.currentState!.validate()) {
-                                    operators.add(Operator(
-                                      name: _name,
-                                      price: _price,
-                                      description: _description,
-                                      primaryWeapon: _primaryWeapon,
-                                      secondaryWeapon: _secondaryWeapon,
-                                      primaryWeaponAmmo: _primaryWeaponAmmo,
-                                      secondaryWeaponAmmo: _secondaryWeaponAmmo,
-                                      armor: _armor,
-                                      speed: _speed,
-                                    ));
-                                    showDialog(
-                                      context: context,
-                                      builder: (context) {
-                                        return AlertDialog(
-                                          title: const Text('Operator saved successfully'),
-                                          content: SingleChildScrollView(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text('Operator name: $_name'),
-                                                Text('Primary weapon: $_primaryWeapon    Ammo: $_primaryWeaponAmmo'),
-                                                Text('Secondary weapon: $_secondaryWeapon    Ammo: $_secondaryWeaponAmmo'),
-                                                Text('Armor: $_armor    Speed: $_speed'),
-                                                Text('Price: $_price'),
-                                                Text('Description: $_description'),
-                                              ],
-                                            ),
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              child: const Text('OK'),
-                                              onPressed: () {
-                                                Navigator.pop(context);
-                                              },
-                                            ),
-                                          ],
+                                    // Kirim ke Django dan tunggu respons
+                                    // DONE: Ganti URL dan jangan lupa tambahkan trailing slash (/) di akhir URL!
+                                    final response = await request.postJson(
+                                      "http://127.0.0.1:8080/create-flutter/",
+                                      // "http://dimas-herjunodarpito-tugas.pbp.cs.ui.ac.id/create-flutter/",
+                                    jsonEncode(<String, String>{
+                                        'name': _name,
+                                        'price': _price.toString(),
+                                        'primary_weapon': _primaryWeapon,
+                                        'secondary_weapon': _secondaryWeapon,
+                                        'primary_weapon_ammo_amount': _primaryWeaponAmmo.toString(),
+                                        'secondary_weapon_ammo_amount': _secondaryWeaponAmmo.toString(),
+                                        'armor': _armor.toString(),
+                                        'speed': _speed.toString(),
+                                        'description': _description,
+                                        'unit': _unit,
+                                    }));
+                                    if (response['status'] == 'success') {
+                                        print(response['status']);
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(const SnackBar(
+                                        content: Text("New operator has been saved!"),
+                                        ));
+                                        Navigator.pushReplacement(
+                                            context,
+                                            MaterialPageRoute(builder: (context) => MyHomePage()),
                                         );
-                                      },
-                                    );
-                                    _formKey.currentState!.reset();
+                                    } else {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(const SnackBar(
+                                            content:
+                                                Text("ERROR, please try again!"),
+                                        ));
+                                    }
                                   }
                                 },
                                 child: const Text(

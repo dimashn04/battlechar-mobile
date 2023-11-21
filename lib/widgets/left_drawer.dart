@@ -1,13 +1,17 @@
+import 'package:battlechar_mobile/screens/login.dart';
 import 'package:battlechar_mobile/screens/operatorlist_items.dart';
 import 'package:flutter/material.dart';
 import 'package:battlechar_mobile/screens/menu.dart';
 import 'package:battlechar_mobile/screens/operatorlist_form.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
 
 class LeftDrawer extends StatelessWidget {
   const LeftDrawer({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final request = context.watch<CookieRequest>();
     return Drawer(
       child: ListView(
         children: [
@@ -74,6 +78,31 @@ class LeftDrawer extends StatelessWidget {
                   MaterialPageRoute(
                     builder: (context) => const OperatorsPage(),
                   ));
+            },
+          ), 
+          ListTile(
+            leading: const Icon(Icons.logout),
+            title: const Text('Logout'),
+            // Bagian redirection ke ShopFormPage
+            onTap: () async {
+              final response = await request.logout(
+                // "http://dimas-herjunodarpito-tugas.pbp.cs.ui.ac.id/auth/logout/",
+                "http://127.0.0.1:8080/auth/logout/");
+              String message = response["message"];
+              if (response['status']) {
+                String uname = response["username"];
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text("$message See you again, $uname!"),
+                ));
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text("$message"),
+                ));
+              }
             },
           ),
         ],

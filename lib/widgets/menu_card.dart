@@ -1,6 +1,9 @@
 import 'package:battlechar_mobile/screens/operatorlist_items.dart';
 import 'package:flutter/material.dart';
 import 'package:battlechar_mobile/screens/operatorlist_form.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
+import 'package:battlechar_mobile/screens/login.dart';
 
 class MenuItem {
   final String name;
@@ -10,20 +13,6 @@ class MenuItem {
   MenuItem(this.name, this.icon, this.color);
 }
 
-class Operator {
-  final String name;
-  final int price;
-  final String description;
-  final String primaryWeapon;
-  final String secondaryWeapon;
-  final int primaryWeaponAmmo;
-  final int secondaryWeaponAmmo;
-  final int armor;
-  final int speed;
-
-  Operator({required this.name, required this.price, required this.description, required this.primaryWeapon, required this.secondaryWeapon, required this.primaryWeaponAmmo, required this.secondaryWeaponAmmo, required this.armor, required this.speed});
-}
-
 class MenuCard extends StatelessWidget {
   final MenuItem item;
 
@@ -31,11 +20,12 @@ class MenuCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final request = context.watch<CookieRequest>();
     return Material(
       color: item.color,
       child: InkWell(
         // Area responsive terhadap sentuhan
-        onTap: () {
+        onTap: () async {
           // Memunculkan SnackBar ketika diklik
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
@@ -51,6 +41,27 @@ class MenuCard extends StatelessWidget {
           if (item.name == "See Operators") {
             Navigator.push(context, 
               MaterialPageRoute(builder: (context) => const OperatorsPage()));
+          }
+
+          if (item.name == "Logout") {
+            final response = await request.logout(
+                // "http://dimas-herjunodarpito-tugas.pbp.cs.ui.ac.id/auth/logout/",
+                "http://127.0.0.1:8080/auth/logout/");
+            String message = response["message"];
+            if (response['status']) {
+              String uname = response["username"];
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text("$message See you again, $uname!"),
+              ));
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginPage()),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text("$message"),
+              ));
+            }
           }
         },
         child: Container(
