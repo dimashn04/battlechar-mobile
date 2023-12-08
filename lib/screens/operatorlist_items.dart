@@ -4,6 +4,8 @@ import 'package:battlechar_mobile/widgets/left_drawer.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:battlechar_mobile/models/operator.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
 
 class OperatorsPage extends StatefulWidget {
   const OperatorsPage({super.key});
@@ -13,22 +15,25 @@ class OperatorsPage extends StatefulWidget {
 }
 
 class _OperatorsPageState extends State<OperatorsPage> {
-  Future<List<Operator>> fetchOperator() async {
-    var url = Uri.parse('http://127.0.0.1:8080/json-by-user/');
-    // var url = Uri.parse('http://dimas-herjunodarpito-tugas.pbp.cs.ui.ac.id/json-by-user/');
-    var response = await http.get(
-      url,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    );
+  Future<List<Operator>> fetchOperator(request) async {
+    // var url = Uri.parse('http://127.0.0.1:8080/json-by-user/');
+    // // var url = Uri.parse('http://dimas-herjunodarpito-tugas.pbp.cs.ui.ac.id/json-by-user/');
+    // var response = await http.get(
+    //   url,
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    // );
 
     // melakukan decode response menjadi bentuk json
-    var data = jsonDecode(utf8.decode(response.bodyBytes));
+    // var data = jsonDecode(utf8.decode(response.bodyBytes));
+
+    var response = await request.get(
+        'http://127.0.0.1:8080/json-by-user/');
 
     // melakukan konversi data json menjadi object Operator
     List<Operator> listOperator = [];
-    for (var d in data) {
+    for (var d in response) {
       if (d != null) {
         // print(d.fields);
         listOperator.add(Operator.fromJson(d));
@@ -39,6 +44,8 @@ class _OperatorsPageState extends State<OperatorsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final request = context.watch<CookieRequest>();
+    
     return Scaffold(
         appBar: AppBar(
           title: const Text(
@@ -50,7 +57,7 @@ class _OperatorsPageState extends State<OperatorsPage> {
         ),
         drawer: const LeftDrawer(),
         body: FutureBuilder(
-            future: fetchOperator(),
+            future: fetchOperator(request),
             builder: (context, AsyncSnapshot snapshot) {
               if (snapshot.data == null) {
                 return const Center(child: CircularProgressIndicator());
